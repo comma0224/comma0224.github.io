@@ -77,27 +77,6 @@ for (var i = 1; i < 100; i++) {
     colModelDamage.push({ label: i.toString(), name: i.toString(), width: 70, cellattr: alignCell });
 }
 
-function jqgridSet(_data,_colModel) {
-    // 기존의 jqGrid를 제거합니다.
-    $('#jqGrid').remove();
-
-    // 새로운 jqGrid를 생성합니다.
-    $('#contentBox').append('<table id="jqGrid"></table>');
-    //$("#jqGrid").jqGrid("GridUnload");
-
-    $("#jqGrid").jqGrid({
-        datatype: "local",
-        data: _data,
-        colModel: _colModel,
-        viewrecords: true,
-        rowNum: _data.length,  // 모든 데이터를 한 페이지에 표시
-        shrinkToFit: false,
-        autowidth:true,
-        autoScroll: true,
-        loadonce:false
-    });
-    $("#jqGrid").jqGrid('setFrozenColumns');
-}
 // 셀 정렬 함수
 function alignCell(rowId, val, rawObject, cm, rdata) {
     if (isNaN(val)) {
@@ -129,10 +108,7 @@ function nameColor(rowId, cellValue, rawObject, cm, rdata) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-
-document.getElementById('skillDPS').addEventListener('click', function() {
-
-    $('#menuName').text(this.textContent);
+    $('#menuName').text("스킬 DPS");
 
     var data = _skill;
     data.forEach(function(row) {
@@ -148,15 +124,19 @@ document.getElementById('skillDPS').addEventListener('click', function() {
             }
         }
     });
+    $('.skillDPS').jqGrid({
+        datatype: "local",
+        data: data,
+        colModel: colModelDPS,
+        viewrecords: true,
+        rowNum: data.length,  // 모든 데이터를 한 페이지에 표시
+        shrinkToFit: false,
+        autowidth:true,
+        autoScroll: true
+    });
+    $('.skillDPS').jqGrid('setFrozenColumns');
 
-    jqgridSet(data,colModelDPS);
-});
-
-document.getElementById('servantDPS').addEventListener('click', function() {
-
-    $('#menuName').text(this.textContent);
-
-    var data = _servant;
+    data = _servant;
     data.forEach(function(row) {
         row['default'] = row['default'].toFixed(2);
         row['growth'] = row['growth'].toFixed(2);
@@ -170,15 +150,19 @@ document.getElementById('servantDPS').addEventListener('click', function() {
             }
         }
     });
+    $('.servantDPS').jqGrid({
+        datatype: "local",
+        data: data,
+        colModel: colModelDPS,
+        viewrecords: true,
+        rowNum: data.length,  // 모든 데이터를 한 페이지에 표시
+        shrinkToFit: false,
+        autowidth:true,
+        autoScroll: true
+    });
+    $('.servantDPS').jqGrid('setFrozenColumns');
 
-    jqgridSet(data,colModelDPS);
-});
-
-document.getElementById('skillDamage').addEventListener('click', function() {
-
-    $('#menuName').text(this.textContent);
-
-    var data = _skill;
+    data = _skill;
     data.forEach(function(row) {
         row['default'] = row['default'].toFixed(2);
         row['growth'] = row['growth'].toFixed(2);
@@ -187,19 +171,23 @@ document.getElementById('skillDamage').addEventListener('click', function() {
             if (row['ranks'] < 5 && i != 100) {
                 row[i.toString()] = "-";
             }else {
-                row[i.toString()] = (parseFloat(row['default']) + (parseFloat(row['growth']) * (i - 1))).toFixed(2);
+                row[i.toString()] = ((parseFloat(row['default']) + (parseFloat(row['growth']) * (i - 1))) * parseFloat(row['hits']) / parseFloat(row['cool_time'])).toFixed(2);
             }
         }
     });
+    $('.skillDamage').jqGrid({
+        datatype: "local",
+        data: data,
+        colModel: colModelDamage,
+        viewrecords: true,
+        rowNum: data.length,  // 모든 데이터를 한 페이지에 표시
+        shrinkToFit: false,
+        autowidth:true,
+        autoScroll: true
+    });
+    $('.skillDamage').jqGrid('setFrozenColumns');
 
-    jqgridSet(data,colModelDamage);
-});
-
-document.getElementById('servantDamage').addEventListener('click', function() {
-
-    $('#menuName').text(this.textContent);
-
-    var data = _servant;
+    data = _servant;
     data.forEach(function(row) {
         row['default'] = row['default'].toFixed(2);
         row['growth'] = row['growth'].toFixed(2);
@@ -208,33 +196,53 @@ document.getElementById('servantDamage').addEventListener('click', function() {
             if (row['ranks'] < 5 && i != 100) {
                 row[i.toString()] = "-";
             }else {
-                row[i.toString()] = (parseFloat(row['default']) + (parseFloat(row['growth']) * (i - 1))).toFixed(2);
+                row[i.toString()] = ((parseFloat(row['default']) + (parseFloat(row['growth']) * (i - 1))) * parseFloat(row['hits']) / parseFloat(row['cool_time'])).toFixed(2);
             }
         }
     });
-
-    jqgridSet(data,colModelDamage);
-});
-
-document.getElementById('specAnalysis').addEventListener('click', function() {
-
-    $('#menuName').text(this.textContent);
-
-    var data = _servant;
-    data.forEach(function(row) {
-        row['default'] = row['default'].toFixed(2);
-        row['growth'] = row['growth'].toFixed(2);
-
-        for (var i = 1; i <= 100; i++) {
-            if (row['ranks'] < 5 && i != 100) {
-                row[i.toString()] = "-";
-            }else {
-                row[i.toString()] = (parseFloat(row['default']) + (parseFloat(row['growth']) * (i - 1))).toFixed(2);
-            }
-        }
+    $('.servantDamage').jqGrid({
+        datatype: "local",
+        data: data,
+        colModel: colModelDamage,
+        viewrecords: true,
+        rowNum: data.length,  // 모든 데이터를 한 페이지에 표시
+        shrinkToFit: false,
+        autowidth:true,
+        autoScroll: true
     });
 
-    jqgridSet(data,colModelDamage);
-});
+    $('.servantDamage').jqGrid('setFrozenColumns');
+
+    hideAllGrids();
+    alert("1");
+    $('.skillDPS').show();
+
+    document.getElementById('skillDPS').addEventListener('click', function() {
+        hideAllGrids();
+        $('.skillDPS').show();
+    });
+
+    document.getElementById('servantDPS').addEventListener('click', function() {
+        hideAllGrids();
+        $('.servantDPS').show();
+    });
+
+    document.getElementById('skillDamage').addEventListener('click', function() {
+        hideAllGrids();
+        $('.skillDamage').show();
+    });
+
+    document.getElementById('servantDamage').addEventListener('click', function() {
+        hideAllGrids();
+        $('.servantDamage').show();
+    });
 
 });
+
+// 모든 그리드를 숨기는 함수
+function hideAllGrids() {
+    $('.skillDPS').hide();
+    $('.servantDPS').hide();
+    $('.skillDamage').hide();
+    $('.servantDamage').hide();
+}
