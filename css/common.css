@@ -1,8 +1,10 @@
 html,body {
     margin: auto;
+    height: 100%;
 }
 #contentBox {
     width: 70%;
+    height: 100%;
     margin: auto;
 }
 #titleBox {
