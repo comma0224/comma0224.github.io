@@ -1,0 +1,30 @@
+html,body {
+    margin: auto;
+}
+#contentBox {
+    width: 70%;
+    margin: auto;
+}
+#titleBox {
+    height: 2em;
+    text-align: left;
+    align-items: center;
+    display: flex;
+    padding: 0 1em;
+    justify-content: flex-start;
+    border-bottom: 1px solid #74b2e2;
+    font-size: 1.5em;
+}
+#title {
+    font-weight: bold;
+}
+
+#menuBox {
+    display: flex;
+    justify-content: space-evenly;
+    flex-grow: 1;
+    font-size: .5em;
+}
+.menu {
+    border: 1px solid black;
+}
