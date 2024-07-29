@@ -18,6 +18,22 @@ function jqgridSet(_data,_colModel) {
     $("#jqGrid").jqGrid('setFrozenColumns');
     $("#jqGrid").trigger("reloadGrid");
 }
+function cooldownEfficiencyGridSet(_data,_colModel) {
+    $("#cooldownEfficiencyGrid").jqGrid({
+        datatype: "local",
+        data: _data,
+        colModel: _colModel,
+        viewrecords: true,
+        rowNum: _data.length,  // 모든 데이터를 한 페이지에 표시
+        shrinkToFit: false,
+        //autowidth:true,
+        height:'auto',
+        autoScroll: true,
+        loadonce:false
+    });
+    $("#cooldownEfficiencyGrid").jqGrid('setFrozenColumns');
+    $("#cooldownEfficiencyGrid").trigger("reloadGrid");
+}
 function createInputGroup(container, items) {
     items.forEach(function(item) {
         var div = document.createElement('div');
@@ -29,7 +45,7 @@ function createInputGroup(container, items) {
         span.textContent = item.name;
 
         var input = document.createElement('input');
-        input.type = 'text';
+        input.type = 'number';
         input.className = 'form-control';
         input.setAttribute('aria-label', 'Sizing example input');
         input.setAttribute('aria-describedby', 'inputGroup-sizing-sm');
@@ -71,8 +87,6 @@ function createInputGroupResult(container, items) {
         input.name = item.key;
         input.id = item.key;
         input.readOnly = true;
-
-        bossSetResult();
 
         div.appendChild(span);
         div.appendChild(input);
@@ -220,6 +234,25 @@ function bossSetResult() {
     var top6SkillData = getTopData(_skillValue, 6);
     var top5SkillData = getTopData(_skillValue, 5);
     var top4ServantData = getTopData(_servantValue, 4);
+
+    $("#nameBox").empty();
+    $("#nameBox").append("채용된 스킬 : ");
+    for (var i = 0; i < top6SkillData.length; i++) {
+        if (i === top6SkillData.length - 1) { // 마지막 요소인 경우
+            $("#nameBox").append(top6SkillData[i].name);
+        } else {
+            $("#nameBox").append(top6SkillData[i].name + ", ");
+        }
+    }
+    $("#nameBox").append('<br>');
+    $("#nameBox").append("채용된 사역마 : ");
+    for (var i = 0; i < top4ServantData.length; i++) {
+        if (i === top4ServantData.length - 1) { // 마지막 요소인 경우
+            $("#nameBox").append(top4ServantData[i].name);
+        } else {
+            $("#nameBox").append(top4ServantData[i].name + ", ");
+        }
+    }
 
 // 상위 랭킹의 DPS 값 구하기
     //var top6skillDPS = calculateTopDamage(top6SkillData, parameters, parameters.skillCriticalHitProbability,parameters.skillCriticalDamage,parameters.skillCooldown,parameters.skillDamage);
@@ -459,32 +492,53 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('skillDPS').addEventListener('click', function(event) {
         $("#specAnalysisBox").hide();
+        $("#cooldownEfficiencyGrid").jqGrid("GridUnload");
         $('#menuName').text(event.target.textContent);
         handleDPSClick(event, _skill, colModelDPS);
     });
 
     document.getElementById('servantDPS').addEventListener('click', function(event) {
         $("#specAnalysisBox").hide();
+        $("#cooldownEfficiencyGrid").jqGrid("GridUnload");
         $('#menuName').text(event.target.textContent);
         handleDPSClick(event, _servant, colModelDPS);
     });
 
     document.getElementById('skillDamage').addEventListener('click', function(event) {
         $("#specAnalysisBox").hide();
+        $("#cooldownEfficiencyGrid").jqGrid("GridUnload");
         $('#menuName').text(event.target.textContent);
         handleDamageClick(event, _skill, colModelDamage);
     });
 
     document.getElementById('servantDamage').addEventListener('click', function(event) {
         $("#specAnalysisBox").hide();
+        $("#cooldownEfficiencyGrid").jqGrid("GridUnload");
         $('#menuName').text(event.target.textContent);
         handleDamageClick(event, _servant, colModelDamage);
     });
 
     document.getElementById('specAnalysis').addEventListener('click', function(event) {
-        $('#menuName').text(event.target.textContent);
         $("#jqGrid").jqGrid("GridUnload");
+        $("#cooldownEfficiencyGrid").jqGrid("GridUnload");
+        $('#menuName').text(event.target.textContent);
         $("#specAnalysisBox").show();
     });
+
+    document.getElementById('cooldownEfficiency').addEventListener('click', function(event) {
+        $("#specAnalysisBox").hide();
+        $("#jqGrid").jqGrid("GridUnload");
+        $('#menuName').text(event.target.textContent);
+
+        const baseColModel = [
+            { label: '쿨타임 감소', name: 'cooldownReduction', width: 100},
+            { label: '쿨타임 0 기준 DPS 증가 비율', name: 'dpsIncreaseRateAtZeroCooldown', width: 250},
+            { label: '쿨타임 1% 추가 시 DPS 상승량', name: 'dpsIncreaseAtOnePercentCooldown', width: 250},
+            { label: '쿨타임 5% 추가 시 DPS 상승량', name: 'dpsIncreaseAtFivePercentCooldown', width: 250}
+        ];
+        cooldownEfficiencyGridSet(_cooldownEfficiency,baseColModel);
+    });
+
+
 
 });

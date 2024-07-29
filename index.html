@@ -24,6 +24,7 @@
         <button id="skillDamage" class="ui-button ui-corner-all ui-widget">스킬 1타 데미지</button>
         <button id="servantDamage" class="ui-button ui-corner-all ui-widget">사역마 1타 데미지</button>
         <button id="specAnalysis" class="ui-button ui-corner-all ui-widget">스펙분석</button>
+        <button id="cooldownEfficiency" class="ui-button ui-corner-all ui-widget">쿨타임 감소 효율표</button>
     </div>
 </div>
 <div id="contentBox">
@@ -39,10 +40,13 @@
             </div>
         </div>
         <div class="d-flexrow-cols-1">
-            <div id="relics-container">유물 장착 별 보스 데미지 비율
+            <div id="relics-container"><b>유물 장착 별 보스 데미지 비율(자물쇠 유물의 경우 스킬 5개만 계산 됨)</b>
+                <div id="nameBox"></div>
             </div>
         </div>
     </div>
+    <table id="cooldownEfficiencyGrid"></table>
+
 </div>
 </body>
 <script src="/js/data.js"></script>
