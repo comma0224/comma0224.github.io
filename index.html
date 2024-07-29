@@ -2,18 +2,18 @@
 <html>
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" href="/css/images/favicon.ico">
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4275544078680781"
             crossorigin="anonymous"></script>
-    <title>Grow_Demon_Slime</title>
+    <title>마왕슬라임키우기</title>
 
     <link rel="stylesheet" type="text/css" href="/css/jquery-ui.min.css">
     <link rel="stylesheet" type="text/css" href="/css/ui.jqgrid.css">
     <link rel="stylesheet" type="text/css" href="/css/common.css">
+    <link rel="stylesheet" type="text/css" href="/css/bootstrap.css">
+    <link rel="stylesheet" type="text/css" href="/css/docs.css">
 
-    <script src="/js/jquery-1.7.2.min.js"></script>
-    <script src="/js/jquery.jqGrid.min.js"></script>
-    <script src="/js/common.js"></script>
 </head>
 <body>
 <div id="titleBox">
@@ -29,10 +29,25 @@
 <div id="contentBox">
 <h1 id="menuName"></h1>
     <table id="jqGrid"></table>
-<!--    <table class="skillDPS"></table>-->
-<!--    <table class="servantDPS"></table>-->
-<!--    <table class="skillDamage"></table>-->
-<!--    <table class="servantDamage"></table>-->
+    <div id="specAnalysisBox">
+        <div class="d-flex justify-content-evenly">
+            <div class="row-cols-3" id="spec-container">상세스펙(유물 안낀 기준 입력)
+            </div>
+            <div class="row-cols-3" id="skill-container">스킬
+            </div>
+            <div class="row-cols-3" id="servant-container">사역마
+            </div>
+        </div>
+        <div class="d-flexrow-cols-1">
+            <div id="relics-container">유물 장착 별 보스 데미지 비율
+            </div>
+        </div>
+    </div>
 </div>
 </body>
+<script src="/js/data.js"></script>
+<script src="/js/jquery-1.7.2.min.js"></script>
+<script src="/js/jquery.jqGrid.min.js"></script>
+<script src="/js/bootstrap.bundle.min.js"></script>
+<script src="/js/common.js"></script>
 </html>

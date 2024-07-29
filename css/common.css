@@ -30,3 +30,43 @@ html,body {
 .menu {
     border: 1px solid black;
 }
+#specAnalysisBox {
+    display: block;
+}
+
+.rank-0 {
+    background-color: #d7ebf9 !important;
+    font-weight: bold !important;
+}
+.rank-1 {
+    color: white !important;
+    background-color: #6c5d6e !important;
+    font-weight: bold !important;
+}
+.rank-2 {
+    color: white !important;
+    background-color: #009517 !important;
+    font-weight: bold !important;
+}
+.rank-3 {
+    color: white !important;
+    background-color: #0069bb !important;
+    font-weight: bold !important;
+}
+.rank-4 {
+    color: white !important;
+    background-color: #79118d !important;
+    font-weight: bold !important;
+}
+.rank-5 {
+    background-color: #f69d00 !important;
+    font-weight: bold !important;
+}
+.rank-6 {
+    background-color: #ef6235 !important;
+    font-weight: bold !important;
+}
+.rank-7 {
+    background-color: #e8ca8f !important;
+    font-weight: bold !important;
+}
