@@ -7,7 +7,7 @@ var _spec =[
     {"name": "사역마 치명타 확률", "ranks": "0", "value": "112.6", "key": "_familiarCriticalHitProbability"},
     {"name": "사역마 치명타 피해량", "ranks": "0", "value": "2597.5", "key": "_familiarCriticalDamage"},
     {"name": "사역마 쿨타임", "ranks": "0", "value": "0", "key": "_familiarCooldown"},
-    {"name": "사역마 피해량", "ranks": "0", "value": "4330.10", "key": "_familiarDamage"},
+    {"name": "사역마 피해량", "ranks": "0", "value": "43330.10", "key": "_familiarDamage"},
     {"name": "일반 몬스터 피해량", "ranks": "0", "value": "145", "key": "_normalMonsterDamage"},
     {"name": "보스 몬스터 피해량", "ranks": "0", "value": "165", "key": "_bossMonsterDamage"},
     {"name": "최종 피해량", "ranks": "0", "value": "710", "key": "_finalDamage"}];
