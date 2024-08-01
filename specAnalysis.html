@@ -130,7 +130,6 @@
 
         function calculateDamage(entity, parameters, _criticalHitProbability, _criticalDamage, _cooldown, _damage ,meteorRelics) {
             if(meteorRelics && entity.key == "meteor") {
-                debugger
                 var value = ((parseFloat(entity.default) + parseFloat(entity.growth) * (entity.level - 1))+1550) * parseFloat(entity.hits);
             }else {
                 var value = (parseFloat(entity.default) + parseFloat(entity.growth) * (entity.level - 1)) * parseFloat(entity.hits);
