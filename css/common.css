@@ -70,3 +70,24 @@ html,body {
     background-color: #e8ca8f !important;
     font-weight: bold !important;
 }
+
+th, td {
+    white-space: nowrap; /* 컬럼 헤더를 한 줄로 표현 */
+}
+
+th.dtfc-fixed-left {
+    background-color: white;
+    top: 0; /* for the header */
+    bottom: 0; /* for the footer */
+    z-index: 3 !important;
+}
+
+ /*테이블 행 높이와 글자 크기 조정 */
+table tbody tr {
+    font-size: 0.8em; /* 글자 크기 조정 */
+}
+
+table tbody tr td:nth-child(n+2) {
+    text-align: right; /* 데이터 정렬을 오른쪽으로 설정 */
+}
+
