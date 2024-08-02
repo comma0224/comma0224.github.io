@@ -91,3 +91,7 @@ table tbody tr td:nth-child(n+2) {
     text-align: right; /* 데이터 정렬을 오른쪽으로 설정 */
 }
 
+#alertMessage {
+    color: var(--bs-red);
+}
+
