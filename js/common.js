@@ -33,6 +33,7 @@ function initializeDataTable(dataSet, columns, fixedColumns) {
         "dom": 'rt', // 'l'과 'f'를 제거하여 "Show entries"와 "Search"를 숨김
         "scrollX": true, // 가로 스크롤 활성화
         "autoWidth": false, // 자동 너비 조정 비활성화
+        "responsive": true, // 반응형 옵션 추가
         "fixedColumns": {
             leftColumns: fixedColumns // 고정할 열의 수
         },
@@ -111,6 +112,6 @@ $(document).ready(function() {
         loadContent(item.id);
     });
 
-    $('#skillDPS').click();
+    $('#specAnalysis').click();
 
 });

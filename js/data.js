@@ -92,22 +92,22 @@ var dataSetSpec =[
 
 var dataSetRelicsSet = [
     {"name": "유물 미장착", "ranks": "0", "value": "0", "key": "relicsSet1"},
-    {"name": "지도5,마법서5,네크로5,슬라임조각5", "ranks": "0", "value": "0", "key": "relicsSet2"},
+    {"name": "지도,마법서,네크로,슬라임조각", "ranks": "0", "value": "0", "key": "relicsSet2"},
     {"name": "큐브1", "ranks": "0", "value": "0", "key": "relicsSet3"},
     {"name": "큐브2", "ranks": "0", "value": "0", "key": "relicsSet4"},
     {"name": "큐브3", "ranks": "0", "value": "0", "key": "relicsSet5"},
     {"name": "큐브4", "ranks": "0", "value": "0", "key": "relicsSet6"},
     {"name": "큐브5", "ranks": "0", "value": "0", "key": "relicsSet7"},
-    {"name": "꿈룬5,맹반5,보검5,인형5", "ranks": "0", "value": "0", "key": "relicsSet9"},
-    {"name": "맹반5,지도5,꼬리5,뇌전5", "ranks": "0", "value": "0", "key": "relicsSet13"},
-    {"name": "맹반5,꼬리5,뇌전5,자물쇠", "ranks": "0", "value": "0", "key": "relicsSet14"},
-    {"name": "맹반5,보검5,인형5,뇌전5", "ranks": "0", "value": "0", "key": "relicsSet15"},
+    {"name": "꿈룬,맹반,보검,인형", "ranks": "0", "value": "0", "key": "relicsSet9"},
+    {"name": "맹반,지도,꼬리,뇌전", "ranks": "0", "value": "0", "key": "relicsSet13"},
+    {"name": "맹반,꼬리,뇌전,자물쇠", "ranks": "0", "value": "0", "key": "relicsSet14"},
+    {"name": "맹반,보검,인형,뇌전", "ranks": "0", "value": "0", "key": "relicsSet15"},
     {"name": "꿈룬,보검,인형,슬라임조각", "ranks": "0", "value": "0", "key": "relicsSet16"},
-    {"name": "꿈룬5,맹반5,뇌전5,지도5", "ranks": "0", "value": "0", "key": "relicsSet11"},
-    {"name": "꿈룬5,맹반5,보검5,뇌전5", "ranks": "0", "value": "0", "key": "relicsSet8"},
-    {"name": "꿈룬5,맹반5,뇌전5,꼬리5", "ranks": "0", "value": "0", "key": "relicsSet10"},
-    {"name": "꿈룬5,맹반5,뇌전5,자물쇠", "ranks": "0", "value": "0", "key": "relicsSet12"},
-    {"name": "꿈룬5,맹반5,붉은공명석,자물쇠", "ranks": "0", "value": "0", "key": "relicsSet17"}];
+    {"name": "꿈룬,맹반,뇌전,지도", "ranks": "0", "value": "0", "key": "relicsSet11"},
+    {"name": "꿈룬,맹반,보검,뇌전", "ranks": "0", "value": "0", "key": "relicsSet8"},
+    {"name": "꿈룬,맹반,뇌전,꼬리", "ranks": "0", "value": "0", "key": "relicsSet10"},
+    {"name": "꿈룬,맹반,뇌전,자물쇠", "ranks": "0", "value": "0", "key": "relicsSet12"},
+    {"name": "꿈룬,맹반,붉은공명석,자물쇠", "ranks": "0", "value": "0", "key": "relicsSet17"}];
 
 var dataSetRelics = [
     {"name": "맹수의 반지", "ranks": "0", "value": "0", "key": "relics12"},
