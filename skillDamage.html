@@ -22,23 +22,6 @@
     $(document).ready(function() {
         var dataSet = dataSetSkill;
         var columns = addColumnsDamage(columnsDamage);
-
-        $('#datatables').DataTable({
-            data: dataSet,
-            columns: columns,
-            "pageLength": -1,
-            "order": [[5, 'asc']],
-            "dom": 'rt', // 'l'과 'f'를 제거하여 "Show entries"와 "Search"를 숨김
-            "scrollX": true, // 가로 스크롤 활성화
-            "autoWidth": false, // 자동 너비 조정 비활성화
-            "fixedColumns": {
-                leftColumns: 4 // '100' 열까지 고정
-            },
-            "createdRow": function(row, data, dataIndex) {
-                if (data.ranks) {
-                    $('td:eq(0)', row).addClass('rank-' + data.ranks); // 첫 번째 열(name)에만 클래스 추가
-                }
-            }
-        }).columns.adjust();
+        initializeDataTable(dataSet, columns, 4);
     });
 </script>

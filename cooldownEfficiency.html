@@ -17,32 +17,7 @@
 <script>
     $(document).ready(function() {
         var dataSet = cooldownEfficiency;
-        var columns = [
-            { data: 'cooldownReduction', title: '쿨타임 감소' },
-            { data: 'dpsIncreaseRateAtZeroCooldown', title: '쿨타임 0 기준 DPS 비율' },
-            { data: 'dpsIncreaseAtOnePercentCooldown', title: '쿨타임 1% 상승 시 DPS 상승량' },
-            { data: 'dpsIncreaseAtFivePercentCooldown', title: '쿨타임 5% 상승 시 DPS 상승량' }
-        ];
-
-        $('#datatables').DataTable({
-            data: dataSet,
-            columns: columns,
-            "pageLength": -1,
-            "order": [[5, 'asc']],
-            "dom": 'rt', // 'l'과 'f'를 제거하여 "Show entries"와 "Search"를 숨김
-            "scrollX": true, // 가로 스크롤 활성화
-            "autoWidth": false, // 자동 너비 조정 비활성화
-            "columnDefs": [
-                { "width": "100px", "targets": "_all" } // 모든 열의 너비를 100px로 설정
-            ],
-            "fixedColumns": {
-                leftColumns: 4 // '100' 열까지 고정
-            },
-            "createdRow": function(row, data, dataIndex) {
-                if (data.ranks) {
-                    $('td:eq(0)', row).addClass('rank-' + data.ranks); // 첫 번째 열(name)에만 클래스 추가
-                }
-            }
-        }).columns.adjust();
+        var columns = cooldownEfficiencyColumn;
+        initializeDataTable(dataSet, columns, 4);
     });
 </script>

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>확률 계산기</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        .result-container {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 20px;
+        }
+        .result-box {
+            text-align: center;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            width: 200px;
+        }
+        .result-box h2 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .result-box p {
+            margin: 10px 0 0;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+<h1>확률 계산기</h1>
+<form id="calculator-form">
+    <label for="probability">확률 (%):</label>
+    <input type="number" id="probability" name="probability" required value="0.0002088">
+    <label for="pricePerTrial">1회 시도 비용:</label>
+    <input type="number" id="pricePerTrial" name="pricePerTrial" step="1" required value="1">
+    <label for="numAttempts">시도 횟수:</label>
+    <input type="number" id="numAttempts" name="numAttempts" required value="100000">
+    <button type="submit">계산하기</button>
+</form>
+<div class="result-container">
+    <div class="result-box">
+        <h2>1회 뽑을 최소 확률</h2>
+        <p id="minProbOneSuccess">0 %</p>
+    </div>
+    <div class="result-box">
+        <h2>1회만 뽑을 확률</h2>
+        <p id="minProbOnlyOneSuccess">0 %</p>
+    </div>
+</div>
+
+<table id="results-table" border="1">
+    <thead>
+    <tr>
+        <th>확률 (%)</th>
+        <th>필요한 시도 횟수</th>
+        <th>총 비용</th>
+    </tr>
+    </thead>
+    <tbody>
+    </tbody>
+</table>
+
+<script>
+    $(document).ready(function() {
+        $('#calculator-form').on('submit', function(event) {
+            event.preventDefault();
+
+            var probability = parseFloat($('#probability').val());
+            var pricePerTrial = parseFloat($('#pricePerTrial').val());
+            var numAttempts = parseInt($('#numAttempts').val());
+            var probabilities = [99, 90, 80, 70, 60, 50, 40, 30, 20, 10, 5, 1];
+            var $tbody = $('#results-table tbody');
+
+            $tbody.empty();
+
+            probabilities.forEach(function(prob) {
+                var trialsNeeded = Math.ceil(Math.log(1 - prob / 100) / Math.log(1 - probability / 100));
+                var totalCost = trialsNeeded * pricePerTrial;
+
+                var $row = $('<tr>');
+                $row.append($('<td>').text(prob));
+                $row.append($('<td>').text(trialsNeeded));
+                $row.append($('<td>').text(totalCost.toFixed(2)));
+
+                $tbody.append($row);
+            });
+            var minProbOneSuccess = 1 - Math.pow(1 - probability / 100, numAttempts);
+            var minProbOnlyOneSuccess = numAttempts * (probability / 100) * Math.pow(1 - probability / 100, numAttempts - 1);
+
+            $('#minProbOneSuccess').text((minProbOneSuccess * 100).toFixed(2) + ' %');
+            $('#minProbOnlyOneSuccess').text((minProbOnlyOneSuccess * 100).toFixed(2) + ' %');
+        });
+    });
+</script>
+</body>
+</html>

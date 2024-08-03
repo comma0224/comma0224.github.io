@@ -73,62 +73,7 @@ var columnsDamage = [
     { data: 'key', title: 'key', visible: false }
 ];
 
-function addColumnsDPS(columns) {
 
-    // 100 열을 먼저 추가
-    columns.push({
-        data: null,
-        title: '100',
-        render: function(data, type, row, meta) {
-            var value = (parseFloat(row.default) + (row.growth * 99)) * row.hits / row.cool_time;
-            return parseFloat(value).toFixed(2); // 소수점 2자리까지 표현
-        }
-    });
-
-    // 1부터 99까지의 열을 추가
-    for (var i = 1; i < 100; i++) {
-        $('#header-row').append('<th>' + i + '</th>');
-        columns.push({
-            data: null,
-            title: i.toString(),
-            render: (function(i) {
-                return function(data, type, row, meta) {
-                    var value = (parseFloat(row.default) + (row.growth * (i-1))) * row.hits / row.cool_time;
-                    return parseFloat(value).toFixed(2); // 소수점 2자리까지 표현
-                };
-            })(i)
-        });
-    }
-    return columns;
-}
-function addColumnsDamage(columns) {
-
-    // 100 열을 먼저 추가
-    columns.push({
-        data: null,
-        title: '100',
-        render: function(data, type, row, meta) {
-            var value = parseFloat(row.default) + (row.growth * 99);
-            return parseFloat(value).toFixed(2); // 소수점 2자리까지 표현
-        }
-    });
-
-    // 1부터 99까지의 열을 추가
-    for (var i = 1; i < 100; i++) {
-        $('#header-row').append('<th>' + i + '</th>');
-        columns.push({
-            data: null,
-            title: i.toString(),
-            render: (function(i) {
-                return function(data, type, row, meta) {
-                    var value = parseFloat(row.default) + (row.growth * (i-1));
-                    return parseFloat(value).toFixed(2); // 소수점 2자리까지 표현
-                };
-            })(i)
-        });
-    }
-    return columns;
-}
 
 var dataSetSpec =[
     {"name": "공격력", "ranks": "0", "value": "1.53", "key": "_attackPower"},
@@ -283,3 +228,20 @@ var cooldownEfficiency = [
     {"cooldownReduction":97,"dpsIncreaseRateAtZeroCooldown":"3233.33%","dpsIncreaseAtOnePercentCooldown":"50.00%","dpsIncreaseAtFivePercentCooldown":"계산 불가"},
     {"cooldownReduction":98,"dpsIncreaseRateAtZeroCooldown":"4900.00%","dpsIncreaseAtOnePercentCooldown":"100.00%","dpsIncreaseAtFivePercentCooldown":"계산 불가"},
     {"cooldownReduction":99,"dpsIncreaseRateAtZeroCooldown":"9900.00%","dpsIncreaseAtOnePercentCooldown":"계산 불가","dpsIncreaseAtFivePercentCooldown":"계산 불가"}];
+
+var dataSetMenu = [
+        {"id": "skillDPS", "text": "스킬 DPS"}
+    ,{"id": "familiarDPS", "text": "사역마 DPS"}
+    ,{"id": "skillDamage", "text": "스킬 1타 데미지"}
+    ,{"id": "familiarDamage", "text": "사역마 1타 데미지"}
+    ,{"id": "specAnalysis", "text": "스펙분석"}
+    ,{"id": "cooldownEfficiency", "text": "쿨타임 감소 효율표"}
+    // ,{"id": "calc", "text": "확률 계산기"}
+    ];
+
+var cooldownEfficiencyColumn =[
+    { data: 'cooldownReduction', title: '쿨타임 감소' },
+    { data: 'dpsIncreaseRateAtZeroCooldown', title: '쿨타임 0 기준 DPS 비율' },
+    { data: 'dpsIncreaseAtOnePercentCooldown', title: '쿨타임 1% 상승 시 DPS 상승량' },
+    { data: 'dpsIncreaseAtFivePercentCooldown', title: '쿨타임 5% 상승 시 DPS 상승량' }
+];
