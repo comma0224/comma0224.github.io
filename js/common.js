@@ -101,7 +101,46 @@ function addColumnsDamage(columns) {
     }
     return columns;
 }
+// 쿠키 저장
+function setCookie(name, value, days) {
+    var expires = "";
+    if (days) {
+        var date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    }
+    document.cookie = name + "=" + (value || "") + expires + "; path=/";
+}
 
+// 쿠키 사용
+function getCookie(name) {
+    var nameEQ = name + "=";
+    var ca = document.cookie.split(';');
+    for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == ' ') c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length, c.length);
+    }
+    return null;
+}
+
+// 배열에서 특정 키를 가진 객체를 찾아 값을 추출하는 함수
+function getValueFromArray(array, key) {
+    var item = array.find(function(element) {
+        return element.key === key;
+    });
+    return item ? item.value : null;
+}
+
+// 특정 key 값을 찾아 value 값을 x만큼 증가시키는 함수
+function increaseValueByKey(array, key, x) {
+    var item = array.find(function(element) {
+        return element.key === key;
+    });
+    if (item) {
+        item.value += x;
+    }
+}
 
 
 $(document).ready(function() {

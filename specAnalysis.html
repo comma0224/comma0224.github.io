@@ -65,7 +65,18 @@
                 input.setAttribute('aria-describedby', 'inputGroup-sizing-sm');
                 input.name = item.key;
                 input.id = item.key;
-                input.value = item.value;
+
+                // 쿠키에서 값을 가져와 설정
+                var cookieValue = getCookie("parameters");
+                if (cookieValue) {
+                    var parameters = JSON.parse(cookieValue);
+                    var parameterItem = parameters.find(function(param) {
+                        return param.key === item.key;
+                    });
+                    input.value = parameterItem ? parameterItem.value : item.value;
+                } else {
+                    input.value = item.value;
+                }
 
                 // 이벤트 리스너 추가
                 input.addEventListener('change', function () {
@@ -108,7 +119,7 @@
             return data.map(function (item) {
                 var level = parseFloat(levelData.find(function (levelItem) {
                     return levelItem.key === item.key;
-                }).level);
+                }).value);
                 if(meteorRelics && item.key == "meteor") {
                     var value = ((parseFloat(item.default) + parseFloat(item.growth) * (level - 1))+1550) * parseFloat(item.hits) / parseFloat(item.cool_time);
                 }else {
@@ -145,7 +156,7 @@
 
 
 
-        function calculateDamage(entity, parameters, _criticalHitProbability, _criticalDamage, _cooldown, _damage ,meteorRelics) {
+        function calculateDamage(entity, _userSpec, _criticalHitProbability, _criticalDamage, _cooldown, _damage ,meteorRelics) {
             if(meteorRelics && entity.key == "meteor") {
                 var value = ((parseFloat(entity.default) + parseFloat(entity.growth) * (entity.level - 1))+1550) * parseFloat(entity.hits);
             }else {
@@ -154,13 +165,13 @@
 
             var cooldown = parseFloat(entity.cool_time) * (1 - (_cooldown / 100));
             var criticalHitMultiplier = _criticalHitProbability >= 100 ? _criticalDamage : _criticalDamage / _criticalHitProbability;
-            var totalDamage = parameters.attackPower * criticalHitMultiplier * _damage * parameters.bossMonsterDamage * parameters.finalDamage * value / cooldown;
+            var totalDamage = getValueFromArray(_userSpec, "_attackPower") * criticalHitMultiplier * _damage * getValueFromArray(_userSpec, "_bossMonsterDamage") * getValueFromArray(_userSpec, "_finalDamage") * value / cooldown;
             return totalDamage;
         }
 
-        function calculateTopDamage(topData, parameters, _criticalHitProbability, _criticalDamage, _cooldown, _damage, meteorRelics = false) {
+        function calculateTopDamage(topData, _userSpec, _criticalHitProbability, _criticalDamage, _cooldown, _damage, meteorRelics = false) {
             return topData.map(function (entity) {
-                var totalDamage = calculateDamage(entity, parameters, _criticalHitProbability, _criticalDamage, _cooldown, _damage, meteorRelics);
+                var totalDamage = calculateDamage(entity, _userSpec, _criticalHitProbability, _criticalDamage, _cooldown, _damage, meteorRelics);
                 return {
                     "name": entity.name,
                     "damage": totalDamage
@@ -179,77 +190,82 @@
 
 
         function bossSetResult() {
-            var parameters = {
-                "attackPower": parseFloat($("#_attackPower").val()), // 공격력
-                "skillCriticalHitProbability": parseFloat($("#_skillCriticalHitProbability").val()), // 스킬 치명타 확률
-                "skillCriticalDamage": parseFloat($("#_skillCriticalDamage").val()), // 스킬 치명타 피해량
-                "skillCooldown": parseFloat($("#_skillCooldown").val()), // 스킬 쿨타임
-                "skillDamage": parseFloat($("#_skillDamage").val()), // 스킬 피해량
-                "familiarCriticalHitProbability": parseFloat($("#_familiarCriticalHitProbability").val()), // 사역마 치명타 확률
-                "familiarCriticalDamage": parseFloat($("#_familiarCriticalDamage").val()), // 사역마 치명타 피해량
-                "familiarCooldown": parseFloat($("#_familiarCooldown").val()), // 사역마 쿨타임
-                "familiarDamage": parseFloat($("#_familiarDamage").val()), // 사역마 피해량
-                "normalMonsterDamage": parseFloat($("#_normalMonsterDamage").val()), // 일반 몬스터 피해량
-                "bossMonsterDamage": parseFloat($("#_bossMonsterDamage").val()), // 보스 몬스터 피해량
-                "finalDamage": parseFloat($("#_finalDamage").val()) // 최종 피해량
-            };
+            var _userSpec = [
+                { "key": "_attackPower", "value": parseFloat($("#_attackPower").val()) }, // 공격력
+                { "key": "_skillCriticalHitProbability", "value": parseFloat($("#_skillCriticalHitProbability").val()) }, // 스킬 치명타 확률
+                { "key": "_skillCriticalDamage", "value": parseFloat($("#_skillCriticalDamage").val()) }, // 스킬 치명타 피해량
+                { "key": "_skillCooldown", "value": parseFloat($("#_skillCooldown").val()) }, // 스킬 쿨타임
+                { "key": "_skillDamage", "value": parseFloat($("#_skillDamage").val()) }, // 스킬 피해량
+                { "key": "_familiarCriticalHitProbability", "value": parseFloat($("#_familiarCriticalHitProbability").val()) }, // 사역마 치명타 확률
+                { "key": "_familiarCriticalDamage", "value": parseFloat($("#_familiarCriticalDamage").val()) }, // 사역마 치명타 피해량
+                { "key": "_familiarCooldown", "value": parseFloat($("#_familiarCooldown").val()) }, // 사역마 쿨타임
+                { "key": "_familiarDamage", "value": parseFloat($("#_familiarDamage").val()) }, // 사역마 피해량
+                { "key": "_normalMonsterDamage", "value": parseFloat($("#_normalMonsterDamage").val()) }, // 일반 몬스터 피해량
+                { "key": "_bossMonsterDamage", "value": parseFloat($("#_bossMonsterDamage").val()) }, // 보스 몬스터 피해량
+                { "key": "_finalDamage", "value": parseFloat($("#_finalDamage").val()) } // 최종 피해량
+            ];
+
 
             var _skillLevel = [
-                {"key": "slash", "level": $("#slash").val()},
-                {"key": "magicSphere", "level": $("#magicSphere").val()},
-                {"key": "skullPress", "level": $("#skullPress").val()},
-                {"key": "lightning", "level": $("#lightning").val()},
-                {"key": "crowFeather", "level": $("#crowFeather").val()},
-                {"key": "energyBall", "level": $("#energyBall").val()},
-                {"key": "icicle", "level": $("#icicle").val()},
-                {"key": "poisonMushroom", "level": $("#poisonMushroom").val()},
-                {"key": "swordMaster", "level": $("#swordMaster").val()},
-                {"key": "aquaBall", "level": $("#aquaBall").val()},
-                {"key": "dancingSword", "level": $("#dancingSword").val()},
-                {"key": "crystalBlaster", "level": $("#crystalBlaster").val()},
-                {"key": "ogreFoot", "level": $("#ogreFoot").val()},
-                {"key": "thornLurker", "level": $("#thornLurker").val()},
-                {"key": "bat", "level": $("#bat").val()},
-                {"key": "hydraBreath", "level": $("#hydraBreath").val()},
-                {"key": "blackHole", "level": $("#blackHole").val()},
-                {"key": "meteor", "level": $("#meteor").val()},
-                {"key": "cometSpear", "level": $("#cometSpear").val()},
-                {"key": "lightWave", "level": $("#lightWave").val()},
-                {"key": "demonEye", "level": $("#demonEye").val()}
+                {"key": "slash", "value": $("#slash").val()},
+                {"key": "magicSphere", "value": $("#magicSphere").val()},
+                {"key": "skullPress", "value": $("#skullPress").val()},
+                {"key": "lightning", "value": $("#lightning").val()},
+                {"key": "crowFeather", "value": $("#crowFeather").val()},
+                {"key": "energyBall", "value": $("#energyBall").val()},
+                {"key": "icicle", "value": $("#icicle").val()},
+                {"key": "poisonMushroom", "value": $("#poisonMushroom").val()},
+                {"key": "swordMaster", "value": $("#swordMaster").val()},
+                {"key": "aquaBall", "value": $("#aquaBall").val()},
+                {"key": "dancingSword", "value": $("#dancingSword").val()},
+                {"key": "crystalBlaster", "value": $("#crystalBlaster").val()},
+                {"key": "ogreFoot", "value": $("#ogreFoot").val()},
+                {"key": "thornLurker", "value": $("#thornLurker").val()},
+                {"key": "bat", "value": $("#bat").val()},
+                {"key": "hydraBreath", "value": $("#hydraBreath").val()},
+                {"key": "blackHole", "value": $("#blackHole").val()},
+                {"key": "meteor", "value": $("#meteor").val()},
+                {"key": "cometSpear", "value": $("#cometSpear").val()},
+                {"key": "lightWave", "value": $("#lightWave").val()},
+                {"key": "demonEye", "value": $("#demonEye").val()}
             ];
 
             var _familiarLevel = [
-                {"key": "lily", "level": $("#lily").val()},
-                {"key": "fuzzy", "level": $("#fuzzy").val()},
-                {"key": "bats", "level": $("#bats").val()},
-                {"key": "kurg", "level": $("#kurg").val()},
-                {"key": "tweety", "level": $("#tweety").val()},
-                {"key": "butterfly", "level": $("#butterfly").val()},
-                {"key": "leila", "level": $("#leila").val()},
-                {"key": "hamji", "level": $("#hamji").val()},
-                {"key": "ready", "level": $("#ready").val()},
-                {"key": "tony", "level": $("#tony").val()},
-                {"key": "crow", "level": $("#crow").val()},
-                {"key": "jeolmi", "level": $("#jeolmi").val()},
-                {"key": "blueA", "level": $("#blueA").val()},
-                {"key": "rh42", "level": $("#rh42").val()},
-                {"key": "icy", "level": $("#icy").val()},
-                {"key": "alpha", "level": $("#alpha").val()},
-                {"key": "lupin", "level": $("#lupin").val()},
-                {"key": "leo", "level": $("#leo").val()},
-                {"key": "basil", "level": $("#basil").val()},
-                {"key": "tot", "level": $("#tot").val()},
-                {"key": "spark", "level": $("#spark").val()},
-                {"key": "brazen", "level": $("#brazen").val()},
-                {"key": "nox", "level": $("#nox").val()},
-                {"key": "cheese", "level": $("#cheese").val()},
-                {"key": "aurora", "level": $("#aurora").val()},
-                {"key": "rockn", "level": $("#rockn").val()},
-                {"key": "coco", "level": $("#coco").val()},
-                {"key": "beta", "level": $("#beta").val()},
-                {"key": "apollo", "level": $("#apollo").val()},
-                {"key": "jelly", "level": $("#jelly").val()}
+                {"key": "lily", "value": $("#lily").val()},
+                {"key": "fuzzy", "value": $("#fuzzy").val()},
+                {"key": "bats", "value": $("#bats").val()},
+                {"key": "kurg", "value": $("#kurg").val()},
+                {"key": "tweety", "value": $("#tweety").val()},
+                {"key": "butterfly", "value": $("#butterfly").val()},
+                {"key": "leila", "value": $("#leila").val()},
+                {"key": "hamji", "value": $("#hamji").val()},
+                {"key": "ready", "value": $("#ready").val()},
+                {"key": "tony", "value": $("#tony").val()},
+                {"key": "crow", "value": $("#crow").val()},
+                {"key": "jeolmi", "value": $("#jeolmi").val()},
+                {"key": "blueA", "value": $("#blueA").val()},
+                {"key": "rh42", "value": $("#rh42").val()},
+                {"key": "icy", "value": $("#icy").val()},
+                {"key": "alpha", "value": $("#alpha").val()},
+                {"key": "lupin", "value": $("#lupin").val()},
+                {"key": "leo", "value": $("#leo").val()},
+                {"key": "basil", "value": $("#basil").val()},
+                {"key": "tot", "value": $("#tot").val()},
+                {"key": "spark", "value": $("#spark").val()},
+                {"key": "brazen", "value": $("#brazen").val()},
+                {"key": "nox", "value": $("#nox").val()},
+                {"key": "cheese", "value": $("#cheese").val()},
+                {"key": "aurora", "value": $("#aurora").val()},
+                {"key": "rockn", "value": $("#rockn").val()},
+                {"key": "coco", "value": $("#coco").val()},
+                {"key": "beta", "value": $("#beta").val()},
+                {"key": "apollo", "value": $("#apollo").val()},
+                {"key": "jelly", "value": $("#jelly").val()}
             ];
+
+
+            // parameters 값을 쿠키로 저장
+            setCookie("parameters", JSON.stringify(_userSpec.concat(_skillLevel.concat(_familiarLevel))), 7);
 
             //레벨에 따른 데미지 값 구하기
             var _skillValue = calculateValue(dataSetSkill, _skillLevel);
@@ -292,307 +308,562 @@
             }
 
             // 상위 랭킹의 DPS 값 구하기
+
+            var excessskillProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability") > 100 ? Math.floor(getValueFromArray(_userSpec, "_skillCriticalHitProbability") - 100) : 0;
+            var excessfamiliarProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability") > 100 ? Math.floor(getValueFromArray(_userSpec, "_familiarCriticalHitProbability") - 100) : 0;
+
             //var top6skillDPS = calculateTopDamage(top6SkillData, parameters, parameters.skillCriticalHitProbability,parameters.skillCriticalDamage,parameters.skillCooldown,parameters.skillDamage);
             //var top4familiarDPS = calculateTopDamage(top4FamiliarData, parameters,parameters.familiarCriticalHitProbability, parameters.familiarCriticalDamage, parameters.familiarCooldown, parameters.familiarDamage);
-
-
-            var modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            var top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            var top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            var modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            var skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            var skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            var skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            var skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            var familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            var familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            var familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            var familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            var top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            var top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             //총 DPS값 구하기
             var totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet1 = totalDPS;
             $("#relicsSet1").val((relicsSet1 / relicsSet1 * 100).toFixed(2) + "%");
 
             //지도5,마법서5,네크로5,슬라임조각5
-            var modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += 200;
-            modifiedParameters.skillDamage += 1600;
-            var top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            modifiedParameters.familiarCriticalDamage += 200;
-            modifiedParameters.familiarDamage += 1600;
-            var top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
-            var totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            skillCriticalDamage += 200;
+            skillDamage += 1600;
+            familiarCriticalDamage += 200;
+            familiarDamage += 1600;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
+            totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet2 = totalDPS;
             $("#relicsSet2").val((relicsSet2 / relicsSet1 * 100).toFixed(2) + "%");
 
             //큐브1
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.bossMonsterDamage += 10;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            increaseValueByKey(modifiedParameters, "_bossMonsterDamage", 10);
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet3 = totalDPS;
             $("#relicsSet3").val((relicsSet3 / relicsSet1 * 100).toFixed(2) + "%");
 
             //큐브2
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.bossMonsterDamage += 20;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            increaseValueByKey(modifiedParameters, "_bossMonsterDamage", 20);
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet4 = totalDPS;
             $("#relicsSet4").val((relicsSet4 / relicsSet1 * 100).toFixed(2) + "%");
 
             //큐브3
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.bossMonsterDamage += 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            increaseValueByKey(modifiedParameters, "_bossMonsterDamage", 30);
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet5 = totalDPS;
             $("#relicsSet5").val((relicsSet5 / relicsSet1 * 100).toFixed(2) + "%");
 
             //큐브4
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.bossMonsterDamage += 40;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            increaseValueByKey(modifiedParameters, "_bossMonsterDamage", 40);
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet6 = totalDPS;
             $("#relicsSet6").val((relicsSet6 / relicsSet1 * 100).toFixed(2) + "%");
 
             //큐브5
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.bossMonsterDamage += 50;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            increaseValueByKey(modifiedParameters, "_bossMonsterDamage", 50);
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet7 = totalDPS;
             $("#relicsSet7").val((relicsSet7 / relicsSet1 * 100).toFixed(2) + "%");
 
-            var excessskillProbability = parameters.skillCriticalHitProbability > 100 ? Math.floor(parameters.skillCriticalHitProbability - 100) : 0;
-            var excessfamiliarProbability = parameters.familiarCriticalHitProbability > 100 ? Math.floor(parameters.familiarCriticalHitProbability - 100) : 0;
-
             //꿈룬5,맹반5,보검5,뇌전5
-            var modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += (excessskillProbability + 50) * 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            modifiedParameters.familiarCriticalDamage += (excessfamiliarProbability + 30) * 30;
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            skillCriticalDamage += (excessskillProbability + 50) * 30;
+            familiarCriticalDamage += (excessfamiliarProbability + 30) * 30;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet8 = totalDPS;
             $("#relicsSet8").val((relicsSet8 / relicsSet1 * 100).toFixed(2) + "%");
 
             //꿈룬5,맹반5,보검5,인형5
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += (excessskillProbability + 30) * 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            modifiedParameters.familiarCriticalDamage += (excessfamiliarProbability + 50) * 30;
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            skillCriticalDamage += (excessskillProbability + 30) * 30;
+            familiarCriticalDamage += (excessfamiliarProbability + 50) * 30;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet9 = totalDPS;
             $("#relicsSet9").val((relicsSet9 / relicsSet1 * 100).toFixed(2) + "%");
 
             //꿈룬5,맹반5,뇌전5,꼬리5
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += (excessskillProbability + 62) * 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            skillCriticalDamage += (excessskillProbability + 62) * 30;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet10 = totalDPS;
             $("#relicsSet10").val((relicsSet10 / relicsSet1 * 100).toFixed(2) + "%");
 
             //꿈룬5,맹반5,뇌전5,지도5
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += (excessskillProbability + 50) * 30 + 200;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            skillCriticalDamage += (excessskillProbability + 50) * 30 + 200;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet11 = totalDPS;
             $("#relicsSet11").val((relicsSet11 / relicsSet1 * 100).toFixed(2) + "%");
 
             //꿈룬5,맹반5,뇌전5,자물쇠
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += (excessskillProbability + 50) * 30;
-            modifiedParameters.skillCooldown += 5;
-            var top5skillDPS = calculateTopDamage(top5SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(modifiedParameters, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(modifiedParameters, "_skillCooldown");
+            skillDamage = getValueFromArray(modifiedParameters, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(modifiedParameters, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(modifiedParameters, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(modifiedParameters, "_familiarCooldown");
+            familiarDamage = getValueFromArray(modifiedParameters, "_familiarDamage");
+            skillCriticalDamage += (excessskillProbability + 50) * 30;
+            skillCooldown += 5;
+            var top5skillDPS = calculateTopDamage(top5SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top5skillDPS.concat(top4familiarDPS));
             var relicsSet12 = totalDPS;
             $("#relicsSet12").val((relicsSet12 / relicsSet1 * 100).toFixed(2) + "%");
 
             //꿈룬5,맹반5,붉은 공명석,자물쇠
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += (excessskillProbability + 50) * 30;
-            modifiedParameters.skillCooldown += 5;
-            var top5skillDPS = calculateTopDamage(top5SkillDataMeteor, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(modifiedParameters, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillCriticalDamage += (excessskillProbability + 50) * 30;
+            skillCooldown += 5;
+            top5skillDPS = calculateTopDamage(top5SkillDataMeteor, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage, true);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top5skillDPS.concat(top4familiarDPS));
             var relicsSet17 = totalDPS;
             $("#relicsSet17").val((relicsSet17 / relicsSet1 * 100).toFixed(2) + "%");
 
             //맹반5,지도5,꼬리5,뇌전5
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += (excessskillProbability + 32) * 30 + 200;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillCriticalDamage += (excessskillProbability + 32) * 30 + 200;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet13 = totalDPS;
             $("#relicsSet13").val((relicsSet13 / relicsSet1 * 100).toFixed(2) + "%");
 
             //맹반5,꼬리5,뇌전5,자물쇠
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += (excessskillProbability + 32) * 30;
-            modifiedParameters.skillCooldown += 5;
-            top5skillDPS = calculateTopDamage(top5SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillCriticalDamage += (excessskillProbability + 32) * 30;
+            skillCooldown += 5;
+            top5skillDPS = calculateTopDamage(top5SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top5skillDPS.concat(top4familiarDPS));
             var relicsSet14 = totalDPS;
             $("#relicsSet14").val((relicsSet14 / relicsSet1 * 100).toFixed(2) + "%");
 
             //맹반5,보검5,인형5,뇌전5
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += (excessskillProbability + 20) * 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            modifiedParameters.familiarCriticalDamage += (excessfamiliarProbability + 20) * 30;
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillCriticalDamage += (excessskillProbability + 20) * 30;
+            familiarCriticalDamage += (excessfamiliarProbability + 20) * 30;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet15 = totalDPS;
             $("#relicsSet15").val((relicsSet15 / relicsSet1 * 100).toFixed(2) + "%");
 
             //꿈룬,보검,인형,슬라임조각
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.familiarCriticalDamage += (excessfamiliarProbability + 50) * 30 + 200;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            familiarCriticalDamage += (excessfamiliarProbability + 50) * 30 + 200;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relicsSet16 = totalDPS;
             $("#relicsSet16").val((relicsSet16 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 유물 개별 딜량 증가량
             // 셀러맨더 꼬리
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += 12 * 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillCriticalDamage += 12 * 30;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics1 = totalDPS;
             $("#relics1").val((relics1 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 대해적의 보물 지도
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += 200;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillCriticalDamage += 200;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics2 = totalDPS;
             $("#relics2").val((relics2 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 강화 슬라임 조각
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.familiarCriticalDamage += 200;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            familiarCriticalDamage += 200;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics3 = totalDPS;
             $("#relics3").val((relics3 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 평범한 자물쇠
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCooldown += 5;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillCooldown += 5;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics4 = totalDPS;
             $("#relics4").val((relics4 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 붉은 공명석
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            top6skillDPS = calculateTopDamage(top6SkillDataMeteor, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage, true);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            top6skillDPS = calculateTopDamage(top6SkillDataMeteor, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage, true);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics5 = totalDPS;
             $("#relics5").val((relics5 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 뇌전의 깃털
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += 20 * 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillCriticalDamage += 20 * 30;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics6 = totalDPS;
             $("#relics6").val((relics6 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 버려진 애착 인형
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.familiarCriticalDamage += 20 * 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            familiarCriticalDamage += 20 * 30;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics7 = totalDPS;
             $("#relics7").val((relics7 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 고대 마법서
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillDamage += 1600;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillDamage += 1600;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics8 = totalDPS;
             $("#relics8").val((relics8 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 네크로노미콘
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.familiarDamage += 1600;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            familiarDamage += 1600;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics9 = totalDPS;
             $("#relics9").val((relics9 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 미확인 큐브
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.bossMonsterDamage += 50;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            increaseValueByKey(modifiedParameters, "_bossMonsterDamage", 50);
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics10 = totalDPS;
             $("#relics10").val((relics10 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 영웅의 낡은 보검
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            modifiedParameters.familiarCriticalDamage += excessfamiliarProbability * 30;
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            familiarCriticalDamage += excessfamiliarProbability * 30;
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics11 = totalDPS;
             $("#relics11").val((relics11 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 맹수의 반지
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += excessskillProbability* 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillCriticalDamage += excessskillProbability* 30;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics12 = totalDPS;
             $("#relics12").val((relics12 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 꿈의 룬 조각(맹반)
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += 30 * 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillCriticalDamage += 30 * 30;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics13 = totalDPS;
             $("#relics13").val((relics13 / relicsSet1 * 100).toFixed(2) + "%");
 
             // 꿈의 룬 조각(보검)
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.familiarCriticalDamage += 30 * 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            familiarCriticalDamage += 30 * 30;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics14 = totalDPS;
             $("#relics14").val((relics14 / relicsSet1 * 100).toFixed(2) + "%");
 
 
             // 꿈의 룬 조각(맹반, 보검)
-            modifiedParameters = JSON.parse(JSON.stringify(parameters)); // parameters 객체 복사
-            modifiedParameters.skillCriticalDamage += 30 * 30;
-            modifiedParameters.familiarCriticalDamage += 30 * 30;
-            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, modifiedParameters.skillCriticalHitProbability, modifiedParameters.skillCriticalDamage, modifiedParameters.skillCooldown, modifiedParameters.skillDamage);
-            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, modifiedParameters.familiarCriticalHitProbability, modifiedParameters.familiarCriticalDamage, modifiedParameters.familiarCooldown, modifiedParameters.familiarDamage);
+            modifiedParameters = JSON.parse(JSON.stringify(_userSpec)); // parameters 객체 복사
+            skillCriticalHitProbability = getValueFromArray(_userSpec, "_skillCriticalHitProbability");
+            skillCriticalDamage = getValueFromArray(_userSpec, "_skillCriticalDamage");
+            skillCooldown = getValueFromArray(_userSpec, "_skillCooldown");
+            skillDamage = getValueFromArray(_userSpec, "_skillDamage");
+            familiarCriticalHitProbability = getValueFromArray(_userSpec, "_familiarCriticalHitProbability");
+            familiarCriticalDamage = getValueFromArray(_userSpec, "_familiarCriticalDamage");
+            familiarCooldown = getValueFromArray(_userSpec, "_familiarCooldown");
+            familiarDamage = getValueFromArray(_userSpec, "_familiarDamage");
+            skillCriticalDamage += 30 * 30;
+            familiarCriticalDamage += 30 * 30;
+            top6skillDPS = calculateTopDamage(top6SkillData, modifiedParameters, skillCriticalHitProbability, skillCriticalDamage, skillCooldown, skillDamage);
+            top4familiarDPS = calculateTopDamage(top4FamiliarData, modifiedParameters, familiarCriticalHitProbability, familiarCriticalDamage, familiarCooldown, familiarDamage);
             totalDPS = calculateTotalDPS(top6skillDPS.concat(top4familiarDPS));
             var relics15 = totalDPS;
             $("#relics15").val((relics15 / relicsSet1 * 100).toFixed(2) + "%");
