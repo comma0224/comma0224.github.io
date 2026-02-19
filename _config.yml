@@ -1,0 +1,8 @@
+# GitHub Pages configuration
+# README.md를 홈페이지로 표시하지 않도록 설정
+markdown: kramdown
+theme: jekyll-theme-minimal
+
+# index.html을 홈페이지로 사용하도록 설정
+index: false
+
